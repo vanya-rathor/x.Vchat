@@ -1,1 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secret Chat 🔒</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #eee;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ─── PASSWORD SCREEN ─── */
+    #lock-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .lock-icon { font-size: 52px; }
+
+    #lock-screen h2 {
+      font-size: 22px;
+      color: #aaa;
+      letter-spacing: 1px;
+    }
+
+    #password-input {
+      padding: 14px 20px;
+      font-size: 18px;
+      border: 2px solid #333;
+      border-radius: 12px;
+      background: #1a1a1a;
+      color: #fff;
+      outline: none;
+      width: 260px;
+      text-align: center;
+      letter-spacing: 4px;
+      transition: border 0.2s;
+    }
+
+    #password-input:focus { border-color: #6c63ff; }
+
+    #enter-btn {
+      padding: 13px 40px;
+      background: #6c63ff;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    #enter-btn:hover { background: #574fd6; }
+    #enter-btn:active { transform: scale(0.97); }
+
+    #error-msg {
+      color: #ff5e5e;
+      font-size: 14px;
+      display: none;
+    }
+
+    .name-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #name-input {
+      padding: 12px 16px;
+      font-size: 15px;
+      border: 2px solid #333;
+      border-radius: 12px;
+      background: #1a1a1a;
+      color: #fff;
+      outline: none;
+      width: 260px;
+      transition: border 0.2s;
+    }
+    #name-input:focus { border-color: #6c63ff; }
+
+    /* ─── CHAT SCREEN ─── */
+    #chat-screen {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      background: #141414;
+    }
+
+    #chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #1c1c1e;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #6c63ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .header-info h3 { font-size: 16px; color: #fff; }
+
+    #online-status {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .online-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4caf50;
+      margin-right: 4px;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+      animation: slideUp 0.2s ease;
+    }
+
+    .msg-wrapper.me { align-self: flex-end; align-items: flex-end; }
+    .msg-wrapper.them { align-self: flex-start; align-items: flex-start; }
+
+    .msg-name {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 3px;
+      padding: 0 4px;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .msg-wrapper.me .bubble {
+      background: #6c63ff;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-wrapper.them .bubble {
+      background: #2a2a2e;
+      color: #eee;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: #666;
+      margin-top: 3px;
+      padding: 0 4px;
+    }
+
+    #typing-indicator {
+      padding: 6px 16px;
+      font-size: 13px;
+      color: #888;
+      height: 26px;
+      font-style: italic;
+    }
+
+    #input-area {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1c1c1e;
+      border-top: 1px solid #2a2a2a;
+      align-items: center;
+    }
+
+    #msg-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: #2a2a2e;
+      border: none;
+      border-radius: 24px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      resize: none;
+    }
+
+    #send-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: #6c63ff;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    #send-btn:hover { background: #574fd6; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .system-msg {
+      text-align: center;
+      font-size: 12px;
+      color: #555;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOCK SCREEN -->
+  <div id="lock-screen">
+    <div class="lock-icon">🔒</div>
+    <h2>Secret Chat</h2>
+    <input id="name-input" type="text" placeholder="Apna naam likho..." maxlength="16"/>
+    <input id="password-input" type="password" placeholder="Password..." />
+    <button id="enter-btn" onclick="verifyPassword()">Enter</button>
+    <div id="error-msg">❌ Wrong password! Try again.</div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="chat-screen">
+    <div id="chat-header">
+      <div class="header-left">
+        <div class="avatar">💬</div>
+        <div class="header-info">
+          <h3>Secret Chat</h3>
+          <div id="online-status"><span class="online-dot"></span><span id="user-count">0</span> online</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="messages">
+      <div class="system-msg">🔐 You're in. Chat is private & real-time.</div>
+    </div>
+
+    <div id="typing-indicator"></div>
+
+    <div id="input-area">
+      <input id="msg-input" type="text" placeholder="Type a message..." autocomplete="off"/>
+      <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let myName = '';
+    let typingTimer;
+
+    // Enter key support
+    document.getElementById('password-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') verifyPassword();
+    });
+
+    document.getElementById('name-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') verifyPassword();
+    });
+
+    async function verifyPassword() {
+      const pass = document.getElementById('password-input').value.trim();
+      const name = document.getElementById('name-input').value.trim();
+
+      if (!name) {
+        document.getElementById('name-input').style.borderColor = '#ff5e5e';
+        document.getElementById('name-input').placeholder = 'Naam zaruri hai!';
+        return;
+      }
+
+      if (!pass) {
+        document.getElementById('password-input').style.borderColor = '#ff5e5e';
+        return;
+      }
+
+      const res = await fetch('/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        myName = name;
+        enterChat();
+      } else {
+        const err = document.getElementById('error-msg');
+        err.style.display = 'block';
+        document.getElementById('password-input').style.borderColor = '#ff5e5e';
+        document.getElementById('password-input').value = '';
+        setTimeout(() => {
+          err.style.display = 'none';
+          document.getElementById('password-input').style.borderColor = '#333';
+        }, 2500);
+      }
+    }
+
+    function enterChat() {
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('chat-screen').style.display = 'flex';
+
+      socket = io();
+
+      socket.on('receive-message', (data) => {
+        addMessage(data);
+      });
+
+      socket.on('user-count', (count) => {
+        document.getElementById('user-count').textContent = count;
+      });
+
+      socket.on('user-typing', (name) => {
+        document.getElementById('typing-indicator').textContent = `${name} is typing...`;
+      });
+
+      socket.on('user-stopped-typing', () => {
+        document.getElementById('typing-indicator').textContent = '';
+      });
+
+      document.getElementById('msg-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') sendMessage();
+        else {
+          socket.emit('typing', myName);
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(() => socket.emit('stop-typing'), 1500);
+        }
+      });
+
+      document.getElementById('msg-input').focus();
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      socket.emit('send-message', { text, sender: myName });
+      socket.emit('stop-typing');
+      input.value = '';
+    }
+
+    function addMessage(data) {
+      const isMe = data.sender === myName;
+      const msgs = document.getElementById('messages');
+
+      const wrapper = document.createElement('div');
+      wrapper.className = `msg-wrapper ${isMe ? 'me' : 'them'}`;
+
+      wrapper.innerHTML = `
+        <div class="msg-name">${data.sender}</div>
+        <div class="bubble">${escapeHtml(data.text)}</div>
+        <div class="msg-time">${data.time}</div>
+      `;
+
+      msgs.appendChild(wrapper);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+  </html>
 

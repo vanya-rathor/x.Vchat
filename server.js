@@ -8,7 +8,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 // ✅ APNA PASSWORD YAHAN BADLO
-const SECRET_PASSWORD = process.env.PASSWORD || 'dost123';
+const SECRET_PASSWORD = process.env.PASSWORD || 'x.V.x';
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
